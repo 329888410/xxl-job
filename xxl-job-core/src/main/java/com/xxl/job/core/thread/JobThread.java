@@ -5,7 +5,6 @@ import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.log.XxlJobFileAppender;
-import com.xxl.job.core.log.XxlJobLogger;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +30,6 @@ public class JobThread extends Thread{
 	private boolean toStop = false;
 	private String stopReason;
 
-    private boolean running = false;    // if running job
-
-
 	public JobThread(IJobHandler handler) {
 		this.handler = handler;
 		triggerQueue = new LinkedBlockingQueue<TriggerParam>();
@@ -43,29 +39,16 @@ public class JobThread extends Thread{
 		return handler;
 	}
 
-    /**
-     * new trigger to queue
-     *
-     * @param triggerParam
-     * @return
-     */
-	public ReturnT<String> pushTriggerQueue(TriggerParam triggerParam) {
-		// avoid repeat
+	public void pushTriggerQueue(TriggerParam triggerParam) {
 		if (triggerLogIdSet.contains(triggerParam.getLogId())) {
 			logger.debug("repeate trigger job, logId:{}", triggerParam.getLogId());
-			return new ReturnT<String>(ReturnT.FAIL_CODE, "repeate trigger job, logId:" + triggerParam.getLogId());
+			return;
 		}
 
 		triggerLogIdSet.add(triggerParam.getLogId());
 		triggerQueue.add(triggerParam);
-        return ReturnT.SUCCESS;
 	}
 
-    /**
-     * kill job thread
-     *
-     * @param stopReason
-     */
 	public void toStop(String stopReason) {
 		/**
 		 * Thread.interrupt只支持终止线程的阻塞状态(wait、join、sleep)，
@@ -75,24 +58,15 @@ public class JobThread extends Thread{
 		this.toStop = true;
 		this.stopReason = stopReason;
 	}
-
-    /**
-     * is running job
-     * @return
-     */
-    public boolean isRunningOrHasQueue() {
-        return running || triggerQueue.size()>0;
-    }
-
-    @Override
+	
+	int i = 1;
+	@Override
 	public void run() {
 		while(!toStop){
-			running = false;
 			try {
 				// to check toStop signal, we need cycle, so wo cannot use queue.take(), instand of poll(timeout)
 				TriggerParam triggerParam = triggerQueue.poll(3L, TimeUnit.SECONDS);
 				if (triggerParam!=null) {
-					running = true;
 					triggerLogIdSet.remove(triggerParam.getLogId());
 					
 					// parse param
@@ -106,7 +80,7 @@ public class JobThread extends Thread{
 						String logFileName = XxlJobFileAppender.makeLogFileName(new Date(triggerParam.getLogDateTim()), triggerParam.getLogId());
 
 						XxlJobFileAppender.contextHolder.set(logFileName);
-						XxlJobLogger.log("----------- xxl-job job execute start -----------");
+						logger.info("----------- xxl-job job execute start -----------");
 
 						executeResult = handler.execute(handlerParams);
 						if (executeResult == null) {
@@ -114,19 +88,16 @@ public class JobThread extends Thread{
 						}
 					} catch (Exception e) {
 						if (toStop) {
-							XxlJobLogger.log("<br>----------- xxl-job toStop, stopReason:" + stopReason);
+							logger.error("<br>----------- xxl-job toStop, stopReason:{}", stopReason);
 						}
+						logger.error("JobThread Exception:", e);
+						StringWriter out = new StringWriter();
+						e.printStackTrace(new PrintWriter(out));
 
-						StringWriter stringWriter = new StringWriter();
-						e.printStackTrace(new PrintWriter(stringWriter));
-						String errorMsg = stringWriter.toString();
-						XxlJobLogger.log("JobThread Exception:" + errorMsg);
-
-						executeResult = new ReturnT<String>(ReturnT.FAIL_CODE, stringWriter.toString());
+						executeResult = new ReturnT<String>(ReturnT.FAIL_CODE, out.toString());
 					}
-
-					XxlJobLogger.log("----------- xxl-job job execute end ----------- <br> " +
-									"Look : ExecutorParams:"+ handlerParams +", Code:"+ executeResult.getCode() +", Msg:" + executeResult.getMsg());
+					logger.info("----------- xxl-job job execute end ----------- <br> Look : ExecutorParams:{}, Code:{}, Msg:{}",
+							new Object[]{handlerParams, executeResult.getCode(), executeResult.getMsg()});
 					
 					// callback handler info
 					if (!toStop) {
@@ -140,13 +111,9 @@ public class JobThread extends Thread{
 				}
 			} catch (Exception e) {
 				if (toStop) {
-					XxlJobLogger.log("<br>----------- xxl-job toStop, stopReason:" + stopReason);
+					logger.error("<br>----------- xxl-job toStop, stopReason:{}", stopReason);
 				}
-
-				StringWriter stringWriter = new StringWriter();
-				e.printStackTrace(new PrintWriter(stringWriter));
-				String errorMsg = stringWriter.toString();
-				XxlJobLogger.log("----------- xxl-job JobThread Exception:" + errorMsg);
+				logger.error("----------- xxl-job JobThread Exception:", e);
 			}
 		}
 		

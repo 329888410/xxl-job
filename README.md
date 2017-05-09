@@ -7,22 +7,22 @@ XXL-JOB是一个轻量级分布式任务调度框架，其核心设计目标是�
 ### 1.2 特性
 - 1、简单：支持通过Web页面对任务进行CRUD操作，操作简单，一分钟上手；
 - 2、动态：支持动态修改任务状态、暂停/恢复任务，以及终止运行中任务，即时生效；
-- 3、调度中心HA（中心式）：调度采用中心式设计，“调度中心”基于集群Quartz实现，可保证调度中心HA；
-- 4、执行器HA（分布式）：任务分布式执行，任务"执行器"支持集群部署，可保证任务执行HA；
+- 3、调度HA：“调度中心”基于集群Quartz实现，可保证调度中心HA；
+- 4、任务HA：任务"执行器"支持集群部署，可保证任务执行HA；
 - 5、任务Failover：执行器集群部署时，任务路由策略选择"故障转移"情况下调度失败时将会平滑切换执行器进行Failover；
 - 6、一致性：“调度中心”通过DB锁保证集群分布式调度的一致性, 一次任务调度只会触发一次执行；
 - 7、自定义任务参数：支持在线配置调度任务入参，即时生效；
 - 8、调度线程池：调度系统多线程触发调度运行，确保调度精确执行，不被堵塞；
-- 9、弹性扩容缩容：一旦有新执行器机器上线或者下线，下次调度时将会重新分配任务；
+- 9、执行日志：支持在线查看调度结果，并且查看完整的执行日志；
 - 10、邮件报警：任务失败时支持邮件报警，支持配置多邮件地址群发报警邮件；
-- 11、状态监控：支持实时监控任务进度；
-- 12、Rolling执行日志：支持在线查看调度结果，并且支持以Rolling方式实时查看执行器输出的完整的执行日志；
-- 13、GLUE：提供Web IDE，支持在线开发任务逻辑代码，动态发布，实时编译生效，省略部署上线的过程。支持30个版本的历史版本回溯。
-- 14、数据加密：调度中心和执行器之间的通讯进行数据加密，提升调度信息安全性；
-- 15、任务依赖：支持配置子任务依赖，当父任务执行结束且执行成功后将会主动触发一次子任务的执行, 多个子任务用逗号分隔；
-- 16、推送maven中央仓库: 将会把最新稳定版推送到maven中央仓库, 方便用户接入和使用;
-- 17、任务注册: 执行器会周期性自动注册任务, 调度中心将会自动发现注册的任务并触发执行。同时，也支持手动录入执行器地址；
-- 18、路由策略：执行器集群部署时提供丰富的路由策略，包括：第一个、最后一个、轮询、随机、一致性HASH、最不经常使用、最近最久未使用、故障转移；
+- 11、支持登录验证；
+- 12、GLUE：提供Web IDE，支持在线开发任务逻辑代码，动态发布，实时编译生效，省略部署上线的过程。支持30个版本的历史版本回溯。
+- 13、数据加密：调度中心和执行器之间的通讯进行数据加密，提升调度信息安全性；
+- 14、任务依赖：支持配置子任务依赖，当父任务执行结束且执行成功后将会主动触发一次子任务的执行, 多个子任务用逗号分隔；
+- 15、推送maven中央仓库: 将会把最新稳定版推送到maven中央仓库, 方便用户接入和使用;
+- 16、任务注册: 执行器会周期性自动注册任务, 调度中心将会自动发现注册的任务并触发执行。同时，也支持手动录入执行器地址；
+- 17、路由策略：执行器集群部署时提供丰富的路由策略，包括：第一个、最后一个、轮询、随机、一致性HASH、最不经常使用、最近最久未使用、故障转移；
+- 18、Rolling日志：支持以Rolling方式实时查看执行器输出的日志信息，实时监控任务进度；
 - 19、运行报表：支持实时查看运行数据，如任务数量、调度次数、执行器数量等；以及调度报表，如调度日期分布图，调度成功分布图等；
 - 20、脚本任务：支持以GLUE模式开发和运行脚本任务，包括Shell、Python等类型脚本;
 
@@ -79,7 +79,7 @@ XXL-JOB是一个轻量级分布式任务调度框架，其核心设计目标是�
 <dependency>
     <groupId>com.xuxueli</groupId>
     <artifactId>xxl-job-core</artifactId>
-    <version>1.7.1</version>
+    <version>1.6.2</version>
 </dependency>
 ```
 
@@ -96,13 +96,12 @@ XXL-JOB是一个轻量级分布式任务调度框架，其核心设计目标是�
 
 #### Download: 历史Release版本下载位置如下图所示,请自行前往进行选择和下载。
 
-![输入图片说明](https://static.oschina.net/uploads/img/201705/08194456_PQTn.png "在这里输入图片标题")
+![输入图片说明](https://static.oschina.net/uploads/img/201704/25151032_nrJN.png "在这里输入图片标题")
 
 ### 1.5 环境
-- JDK：1.7+
 - Servlet/JSP Spec：3.1/2.3
-- Tomcat：8.5.x/Jetty9.2
-- Spring-boot：1.3.8/Spring4.x
+- JDK：1.7+
+- Tomcat：8.5.x+/Jetty9.2+
 - Mysql：5.6+
 - Maven：3+
 
@@ -153,15 +152,15 @@ XXL-JOB是一个轻量级分布式任务调度框架，其核心设计目标是�
     xxl.job.mail.sendFrom=ovono802302@163.com
     xxl.job.mail.sendNick=《任务调度平台XXL-JOB》
     
-    # 登录账号
+    # 登陆账号
     xxl.job.login.username=admin
     xxl.job.login.password=123456
 
 #### 部署项目：
 如果已经正确进行上述配置，可将项目编译打war包并部署到tomcat中。
-访问链接：http://localhost:8080/xxl-job-admin/ ，登录后运行界面如下图所示
+访问链接：http://localhost:8080/xxl-job-admin/ ，登陆后运行界面如下图所示
 
-![输入图片说明](https://static.oschina.net/uploads/img/201705/08194505_6yC0.png "在这里输入图片标题")
+![输入图片说明](https://static.oschina.net/uploads/img/201704/25145242_KIKQ.png "在这里输入图片标题")
 
 至此“调度中心”项目已经部署成功。
 
@@ -173,22 +172,18 @@ XXL-JOB是一个轻量级分布式任务调度框架，其核心设计目标是�
 #### 执行器配置：
 配置文件以及配置属性如下图所示。
 
-![输入图片说明](https://static.oschina.net/uploads/img/201705/02182818_WeyS.png "在这里输入图片标题")
+![输入图片说明](https://static.oschina.net/uploads/img/201703/13150738_Fv8v.png "在这里输入图片标题")
 
-
-    ### xxl-job db：执行器JDBC链接：请保持和调度中心JDBC连接配置一致；(执行器 "DbRegistHelper" 依赖JDBC配置；推荐将其抽象为RPC远程服务, 可取消对JDBC的依赖；如不启用执行自动注册功能，也可忽略JDBC配置; )
+    ### 执行器JDBC链接：请保持和调度中心JDBC连接配置一致；(执行器 "DbRegistHelper" 依赖JDBC配置；推荐将其抽象为RPC远程服务, 可取消对JDBC的依赖；如不启用执行自动注册功能，也可忽略JDBC配置; )
     xxl.job.db.driverClass=com.mysql.jdbc.Driver
-    xxl.job.db.url=jdbc:mysql://localhost:3306/xxl-job?useUnicode=true&characterEncoding=UTF-8
+    xxl.job.db.url=jdbc:mysql://localhost:3306/xxl-job?useUnicode=true&amp;characterEncoding=UTF-8
     xxl.job.db.user=root
     xxl.job.db.password=root_pwd
     
-    ### xxl-job executor address：执行器"AppName"和地址信息配置：AppName为执行器分组依据。“调度中心”将会请求该地址触发任务，改地址将会用于执行器注册。执行器默认端口为9999，执行器IP默认为空表示自动获取IP，多网卡时可手动设置指定IP；
+    ### 执行器"AppName"和地址信息配置：AppName为执行器分组依据。“调度中心”将会请求该地址触发任务，改地址将会用于执行器注册。执行器默认端口为9999，执行器IP默认为空表示自动获取IP，多网卡时可手动设置指定IP；
     xxl.job.executor.appname=xxl-job-executor-example
     xxl.job.executor.ip=
     xxl.job.executor.port=9999
-    
-    ### xxl-job log path：执行器运行日志文件存储的磁盘位置
-    xxl.job.executor.logpath=/data/applogs/xxl-job/jobhandler/
 
 
 #### 组件配置：
@@ -210,7 +205,7 @@ XXL-JOB是一个轻量级分布式任务调度框架，其核心设计目标是�
 #### 前提：请确认“调度中心”和“执行器”项目已经成功部署并启动；
 
 #### 步骤一：新建任务：
-登录调度中心，点击下图所示“新建任务”按钮，新建示例任务。然后，参考下面截图中任务的参数配置，点击保存。
+登陆调度中心，点击下图所示“新建任务”按钮，新建示例任务。然后，参考下面截图中任务的参数配置，点击保存。
 
 ![输入图片说明](https://static.oschina.net/uploads/img/201704/27205910_o8HQ.png "在这里输入图片标题")
 
@@ -409,16 +404,7 @@ try{
 }
 ```
 
-而且，在JobHandler中开启子线程时，子线程也不可catch处理"InterruptedException"，应该主动向上抛出。
-
-
-#### 4.9 删除执行日志
-在任务日志界面，选中执行器和任务之后，点击右侧的"删除"按钮将会出现"日志清理"弹框，弹框中支持选择不同类型的日志清理策略，选中后点击"确定"按钮即可进行日志清理操作；
-![输入图片说明](https://static.oschina.net/uploads/img/201705/08210711_Ypik.png "在这里输入图片标题")
-
-![输入图片说明](https://static.oschina.net/uploads/img/201705/08211152_EB65.png "在这里输入图片标题")
-
-#### 4.10 删除任务
+#### 4.9 删除任务
 点击删除按钮，可以删除对应任务。
 
 ![输入图片说明](https://static.oschina.net/uploads/img/201607/24140641_Z9Qr.png "在这里输入图片标题")
@@ -464,7 +450,7 @@ XXL-JOB首先定制了Quartz原生表结构前缀（XXL_JOB_QRTZ_）。
     接收“调度中心”的执行请求、终止请求和日志请求等。
 
 ##### 5.3.3 架构图     
-![输入图片说明](https://static.oschina.net/uploads/img/201705/07182857_ilLf.png "在这里输入图片标题")
+![输入图片说明](https://static.oschina.net/uploads/img/201610/03211500_213n.png "在这里输入图片标题")
 
 #### 5.4 调度模块剖析
 ##### 5.4.1 quartz的不足
@@ -541,7 +527,7 @@ CronTrigger cronTrigger = TriggerBuilder.newTrigger().withIdentity(triggerKey).w
 ##### 5.4.8 任务HA（Failover）
 执行器如若集群部署，调度中心将会感知到在线的所有执行器，如“127.0.0.1:9997, 127.0.0.1:9998, 127.0.0.1:9999”。
 
-当任务"路由策略"选择"故障转移(FAILOVER)"时，当调度中心每次发起调度请求时，会按照顺序对执行器发出心跳检测请求，第一个检测为存活状态的执行器将会被选定并发送调度请求。
+当任务"路由策略"选择"故障转移(FAILOVER)"时，当调度中心每次发起调度请求时，会对执行器随机排序，然后按照顺序取对执行器发出心跳检测请求，第一个检测为存活状态的执行器将会被选定并发送调度请求。
 ![输入图片说明](https://static.oschina.net/uploads/img/201703/12230049_EBkr.png "在这里输入图片标题")
 
 调度成功后，可在日志监控界面查看“调度备注”，如下；
@@ -601,13 +587,32 @@ CronTrigger cronTrigger = TriggerBuilder.newTrigger().withIdentity(triggerKey).w
 “执行器”接收到“调度中心”的调度请求时，如果任务类型为“Bean模式”，将会匹配Spring容器中的“Bean模式任务”，然后调用其execute方法，执行任务逻辑。如果任务类型为“GLUE模式”，将会加载GLue代码，实例化Java对象，注入依赖的Spring服务（注意：Glue代码中注入的Spring服务，必须存在与该“执行器”项目的Spring容器中），然后调用execute方法，执行任务逻辑。
 
 ##### 5.5.4 任务日志
-XXL-JOB会为每次调度请求生成一个单独的日志文件，需要通过 "XxlJobLogger.log" 打印执行日志，“调度中心”查看执行日志时将会加载对应的日志文件。
+XXL-JOB会为每次调度请求生成一个单独的日志文件，通过重写LOG4J的Appender实现，“调度中心”查看执行日志时将会加载对应的日志文件。
 
-(历史版本通过重写LOG4J的Appender实现，存在依赖限制，该方式在新版本已经被抛弃)
+需要注意的是，“执行器”中日志Appender上配置的包名，需要覆盖到所有任务（Bean模式 + GLUE模式）的包名，否则覆盖不到的任务将不会生成日志文件。
 
-日志文件存放的位置可在“执行器”配置文件进行自定义，默认目录格式为：/data/applogs/xxl-job/jobhandler/“格式化日期”/“数据库调度日志记录的主键ID.log”。
+```
+// 以下代码见/xxl-job/xxl-job-executor-example/src/main/resources/log4j.xml文件
+<appender name="xxl-job" class="com.xxl.job.core.log.XxlJobFileAppender">
+    <param name="filePath" value="/data/applogs/xxl-job/jobhandler/"/>
+    <param name="append" value="true"/>
+    <param name="encoding" value="UTF-8"/>
+    <layout class="org.apache.log4j.PatternLayout">
+        <param name="ConversionPattern" value="%-d{yyyy-MM-dd HH:mm:ss} [%c]-[%t]-[%M]-[%L]-[%p] %m%n"/>
+    </layout>
+</appender>
+...
+<logger name="com.xxl.job.executor.service.jobhandler" additivity="false">
+    <level value="INFO" />
+    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="FILE" />
+    <appender-ref ref="xxl-job"/>
+</logger>
+```
 
-在JobHandler中开启子线程时，子线程将会将会把日志打印在父线程即JobHandler的执行日志中，方便日志追踪。
+单独日志文件存放的位置可在“执行器”的log.xml文件进行自定义，默认位置为项目磁盘根目录下“/data/applogs/xxl-job/jobhandler/”；
+
+目录格式为：/data/applogs/xxl-job/jobhandler/“格式化日期”/“数据库调度日志记录的主键ID.log”。
 
 #### 5.6 通讯模块剖析
 
@@ -806,35 +811,20 @@ Tips: 历史版本(V1.3.x)目前已经Release至稳定版本, 进入维护阶段
 - 3、资源路径包含空格或中文时资源文件无法加载时，无法准确查看异常信息的问题处理。
 - 4、路由策越优化：循环和LFU路由策略计数器自增无上限问题和首次路由压力集中在首台机器的问题修复；
 
-#### 6.14 版本 V1.7.0 特性
-- 1、脚本任务：支持以GLUE模式开发和运行脚本任务，包括Shell、Python和Groovy等类型脚本;
+#### 6.14 版本 V1.7.0 特性 (Coding)
+- 1、脚本任务：支持以GLUE模式开发和运行脚本任务，包括Shell、Python等类型脚本;
 - 2、新增spring-boot类型执行器example项目；
 - 3、升级jetty版本至9.2；
-- 4、任务运行日志移除log4j组件依赖，改为底层自主实现，从而取消了对日志组件的依赖限制；
-- 5、执行器移除GlueLoader依赖，改为推送方式实现，从而GLUE源码加载不再依赖JDBC；
-- 6、登录拦截Redirect时获取项目名，解决非根据目录发布时跳转404问题；
-
-#### 6.15 版本 V1.7.1 特性
-- 1、运行日志读写编码统一为UTF-8，解决windows环境下日志乱码问题；
-- 2、通讯超时时间限定为10s，避免异常情况下调度线程占用；
-- 3、执行器，server启动、销毁和注册逻辑调整；
-- 4、JettyServer关闭逻辑优化，修复执行器无法正常关闭导致端口占用和频繁打印c3p0日志的问题；
-- 5、JobHandler中开启子线程时，支持子线程输出执行日志并通过Rolling查看。
-- 6、任务日志清理功能；
-- 7、弹框组件统一替换为layer；
-- 8、升级quartz版本至2.3.0；
-
-#### 6.15 版本 V1.7.2 特性（Coding）
-- 1、阻塞处理策略：调度过于密集执行器来不及处理时的处理策略，策略包括：单机串行（默认）、丢弃后续调度、覆盖之前调度；
-- 2、失败处理策略；调度失败时的处理策略，策略包括：失败告警（默认）、失败重试；
+- 2、执行器移除GlueLoader依赖改为推送方式，GLUE源码加载不再依赖JDBC；
+- 3、登陆拦截Redirect时获取项目名，解决非根据目录发布时跳转404问题；
 
 #### TODO LIST
-- 1、任务权限管理：执行器为粒度分配权限，核心操作校验权限；
-- 2、执行器与数据库解耦，只需配置调度中心集群地址即可（与当前通过JDBC注册自动发现方式，相冲突，待考虑），调度中心提供API供执行器回调和注册，取消调度中心内部jetty；
-- 3、任务分片：一个任务被拆分成N个独立的任务单元，然后由分布式部署的执行器分别执行某一个或几个分片单元；
-- 4、任务分片路由：分片采用一致性Hash算法计算出尽量稳定的分片顺序，即使注册机器存在波动也不会引起分批分片顺序大的波动；
-
-
+- 1、任务并行触发处理规则：串行调度队列（默认）、并行、忽略、覆盖；
+- 2、任务权限管理；
+- 3、执行器，server启动，注册逻辑调整；
+- 4、调度失败重试机制；
+- 5、JobHandler开启多线程时，支持记录执行日志；
+- 6、执行器与数据库解耦，只需配置调度中心集群地址即可（与当前通过JDBC注册自动发现方式，相冲突，待考虑）；
 
 ## 七、其他
 

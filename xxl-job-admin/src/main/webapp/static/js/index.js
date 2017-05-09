@@ -18,11 +18,7 @@ $(function () {
                 lineChartInit(data)
                 pieChartInit(data);
             } else {
-                layer.open({
-                    title: '系统提示',
-                    content: (data.msg || '调度报表数据加载异常'),
-                    icon: '2'
-                });
+                ComAlert.show(2, data.msg || '调度报表数据加载异常' );
             }
         }
     });

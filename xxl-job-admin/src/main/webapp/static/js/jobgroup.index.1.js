@@ -4,9 +4,7 @@ $(function() {
 	$('.remove').on('click', function(){
 		var id = $(this).attr('id');
 
-		layer.confirm('确认删除分组?', {icon: 3, title:'系统提示'}, function(index){
-			layer.close(index);
-
+		ComConfirm.show("确认删除分组?", function(){
 			$.ajax({
 				type : 'POST',
 				url : base_url + '/jobgroup/remove',
@@ -14,25 +12,18 @@ $(function() {
 				dataType : "json",
 				success : function(data){
 					if (data.code == 200) {
-						layer.open({
-							title: '系统提示',
-							content: '删除成功',
-							icon: '1',
-							end: function(layero, index){
-								window.location.reload();
-							}
-						});
+						ComAlert.show(1, '删除成功');
+						window.location.reload();
 					} else {
-						layer.open({
-							title: '系统提示',
-							content: (data.msg || "删除失败"),
-							icon: '2'
-						});
+						if (data.msg) {
+							ComAlert.show(2, data.msg);
+						} else {
+							ComAlert.show(2, '删除失败');
+						}
 					}
 				},
 			});
 		});
-
 	});
 
 	// jquery.validate 自定义校验 “英文字母开头，只含有英文字母、数字和下划线”
@@ -95,20 +86,17 @@ $(function() {
 			$.post(base_url + "/jobgroup/save",  $("#addModal .form").serialize(), function(data, status) {
 				if (data.code == "200") {
 					$('#addModal').modal('hide');
-					layer.open({
-						title: '系统提示',
-						content: '新增成功',
-						icon: '1',
-						end: function(layero, index){
+					setTimeout(function () {
+						ComAlert.show(1, "新增成功", function(){
 							window.location.reload();
-						}
-					});
+						});
+					}, 315);
 				} else {
-					layer.open({
-						title: '系统提示',
-						content: (data.msg || "新增失败"),
-						icon: '2'
-					});
+					if (data.msg) {
+						ComAlert.show(2, data.msg);
+					} else {
+						ComAlert.show(2, "新增失败");
+					}
 				}
 			});
 		}
@@ -198,21 +186,17 @@ $(function() {
 			$.post(base_url + "/jobgroup/update",  $("#updateModal .form").serialize(), function(data, status) {
 				if (data.code == "200") {
 					$('#addModal').modal('hide');
-
-					layer.open({
-						title: '系统提示',
-						content: '更新成功',
-						icon: '1',
-						end: function(layero, index){
+					setTimeout(function () {
+						ComAlert.show(1, "更新成功", function(){
 							window.location.reload();
-						}
-					});
+						});
+					}, 315);
 				} else {
-					layer.open({
-						title: '系统提示',
-						content: (data.msg || "更新失败"),
-						icon: '2'
-					});
+					if (data.msg) {
+						ComAlert.show(2, data.msg);
+					} else {
+						ComAlert.show(2, "更新失败");
+					}
 				}
 			});
 		}

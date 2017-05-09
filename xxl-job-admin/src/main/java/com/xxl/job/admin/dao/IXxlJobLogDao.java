@@ -29,6 +29,4 @@ public interface IXxlJobLogDao {
 
 	public List<Map<String, Object>> triggerCountByDay(Date from, Date to, int handleCode);
 
-	public int clearLog(int jobGroup, int jobId, Date clearBeforeTime, int clearBeforeNum);
-
 }
