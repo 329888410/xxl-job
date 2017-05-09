@@ -60,10 +60,13 @@ public class XxlJobExecutor implements ApplicationContextAware, ApplicationListe
         TriggerCallbackThread.getInstance().start();
     }
     public void destroy(){
-        // executor stop
+        // 1、executor registry thread stop
+        ExecutorRegistryThread.getInstance().toStop();
+
+        // 2、executor stop
         serverFactory.destroy();
 
-        // job thread repository destory
+        // 3、job thread repository destory
         if (JobThreadRepository.size() > 0) {
             for (Map.Entry<Integer, JobThread> item: JobThreadRepository.entrySet()) {
                 JobThread jobThread = item.getValue();
@@ -74,11 +77,8 @@ public class XxlJobExecutor implements ApplicationContextAware, ApplicationListe
             JobThreadRepository.clear();
         }
 
-        // trigger callback thread stop
+        // 4、trigger callback thread stop
         TriggerCallbackThread.getInstance().toStop();
-
-        // executor registry thread stop
-        ExecutorRegistryThread.getInstance().toStop();
     }
 
     // ---------------------------------- init job handler ------------------------------------
@@ -121,19 +121,29 @@ public class XxlJobExecutor implements ApplicationContextAware, ApplicationListe
 
     // ---------------------------------- job thread repository
     private static ConcurrentHashMap<Integer, JobThread> JobThreadRepository = new ConcurrentHashMap<Integer, JobThread>();
-    public static JobThread registJobThread(int jobId, IJobHandler handler){
-        JobThread jobThread = new JobThread(handler);
-        jobThread.start();
+    public static JobThread registJobThread(int jobId, IJobHandler handler, String removeOldReason){
+        JobThread newJobThread = new JobThread(handler);
+        newJobThread.start();
         logger.info(">>>>>>>>>>> xxl-job regist JobThread success, jobId:{}, handler:{}", new Object[]{jobId, handler});
-        JobThreadRepository.put(jobId, jobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
-        return jobThread;
+
+        JobThread oldJobThread = JobThreadRepository.put(jobId, newJobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
+        if (oldJobThread != null) {
+            oldJobThread.toStop(removeOldReason);
+            oldJobThread.interrupt();
+        }
+
+        return newJobThread;
+    }
+    public static void removeJobThread(int jobId, String removeOldReason){
+        JobThread oldJobThread = JobThreadRepository.remove(jobId);
+        if (oldJobThread != null) {
+            oldJobThread.toStop(removeOldReason);
+            oldJobThread.interrupt();
+        }
     }
     public static JobThread loadJobThread(int jobId){
         JobThread jobThread = JobThreadRepository.get(jobId);
         return jobThread;
-    }
-    public static void removeJobThread(int jobId){
-        JobThreadRepository.remove(jobId);
     }
 
 }
